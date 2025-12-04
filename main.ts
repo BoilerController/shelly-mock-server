@@ -114,7 +114,26 @@ function handleRequest(request: Request): Response {
       });
     }
 
-    return new Response(JSON.stringify(state), {
+    const statusResponse = {
+      id,
+      source: "HTTP_in",
+      output: state.on,
+      brightness: state.brightness,
+      temperature: {
+        tC: 26.0,
+        tF: 78.7,
+      },
+      aenergy: {
+        total: 2423.0,
+        by_minute: [0.0, 0.0, 0.0],
+        minute_ts: 1764794280,
+      },
+      apower: 0.0,
+      current: 0.0,
+      voltage: 226.8,
+    };
+
+    return new Response(JSON.stringify(statusResponse), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });

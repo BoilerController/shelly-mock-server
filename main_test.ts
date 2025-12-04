@@ -18,8 +18,14 @@ Deno.test("Light.GetStatus returns initial state", async () => {
   const response = await fetch(`${BASE_URL}/rpc/Light.GetStatus?id=0`);
   assertEquals(response.status, 200);
   const data = await response.json();
-  assertExists(data.on);
-  assertExists(data.brightness);
+  assertEquals(data.id, 0);
+  assertEquals(data.output, false);
+  assertEquals(data.brightness, 0);
+  assertExists(data.temperature);
+  assertExists(data.aenergy);
+  assertExists(data.apower);
+  assertExists(data.current);
+  assertExists(data.voltage);
 });
 
 Deno.test("Light.Set brightness persists", async () => {
@@ -43,7 +49,7 @@ Deno.test("Light.Set on=true persists", async () => {
   // Verify persistence
   const statusResponse = await fetch(`${BASE_URL}/rpc/Light.GetStatus?id=0`);
   const statusData = await statusResponse.json();
-  assertEquals(statusData.on, true);
+  assertEquals(statusData.output, true);
 });
 
 Deno.test("Light.Set on=false persists", async () => {
@@ -55,7 +61,7 @@ Deno.test("Light.Set on=false persists", async () => {
   // Verify persistence
   const statusResponse = await fetch(`${BASE_URL}/rpc/Light.GetStatus?id=0`);
   const statusData = await statusResponse.json();
-  assertEquals(statusData.on, false);
+  assertEquals(statusData.output, false);
 });
 
 Deno.test("Light.GetStatus returns 404 for unknown light id", async () => {
