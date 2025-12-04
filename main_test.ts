@@ -19,7 +19,7 @@ Deno.test("Light.GetStatus returns initial state", async () => {
   assertEquals(response.status, 200);
   const data = await response.json();
   assertExists(data.on);
-  assertExists(data.brightness !== undefined);
+  assertExists(data.brightness);
 });
 
 Deno.test("Light.Set brightness persists", async () => {
@@ -79,5 +79,23 @@ Deno.test("Light.GetStatus returns 400 when id is missing", async () => {
 Deno.test("Unknown endpoint returns 404", async () => {
   const response = await fetch(`${BASE_URL}/unknown`);
   assertEquals(response.status, 404);
+  await response.text();
+});
+
+Deno.test("Light.Set returns 400 for invalid brightness", async () => {
+  const response = await fetch(`${BASE_URL}/rpc/Light.Set?id=0&brightness=abc`);
+  assertEquals(response.status, 400);
+  await response.text();
+});
+
+Deno.test("Light.Set returns 400 for brightness out of range", async () => {
+  const response = await fetch(`${BASE_URL}/rpc/Light.Set?id=0&brightness=150`);
+  assertEquals(response.status, 400);
+  await response.text();
+});
+
+Deno.test("Light.Set returns 400 for negative brightness", async () => {
+  const response = await fetch(`${BASE_URL}/rpc/Light.Set?id=0&brightness=-10`);
+  assertEquals(response.status, 400);
   await response.text();
 });

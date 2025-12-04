@@ -66,9 +66,19 @@ function handleRequest(request: Request): Response {
     const brightnessParam = params.get("brightness");
     if (brightnessParam !== null) {
       const brightness = parseInt(brightnessParam, 10);
-      if (!isNaN(brightness)) {
-        updates.brightness = brightness;
+      if (isNaN(brightness)) {
+        return new Response(JSON.stringify({ error: "brightness must be a number" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        });
       }
+      if (brightness < 0 || brightness > 100) {
+        return new Response(JSON.stringify({ error: "brightness must be between 0 and 100" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      updates.brightness = brightness;
     }
 
     const updated = setLightState(id, updates);
