@@ -160,11 +160,3 @@ Shelly brightness dictates the mocked boiler draw. The values below originate fr
 | 90 | 1705 | 1711 |
 | 95 | 1712 | 1716 |
 | 100 | 1719 | 1727 |
-
-## Testing
-
-Start the server first, then run the tests:
-
-```bash
-deno test --allow-net main_test.ts
-```
