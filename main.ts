@@ -9,6 +9,8 @@ function handleRequest(request: Request): Response {
   const pathname = url.pathname;
   const params = url.searchParams;
 
+  console.log(pathname, params);
+
   if (pathname === "/p1/reading") {
     return handleP1ReadingRequest();
   }
@@ -17,9 +19,11 @@ function handleRequest(request: Request): Response {
     return handleP1ChangeScenarioRequest(params);
   }
 
-  const shellyResponse = handleShellyRequest(pathname, params);
-  if (shellyResponse) {
-    return shellyResponse;
+  if (pathname.startsWith("/rpc/")) {
+    const shellyResponse = handleShellyRequest(pathname, params);
+    if (shellyResponse) {
+      return shellyResponse;
+    }
   }
 
   return new Response(JSON.stringify({ error: "not found" }), {

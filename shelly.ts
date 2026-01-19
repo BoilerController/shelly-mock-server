@@ -208,7 +208,14 @@ function handleLightSet(params: URLSearchParams): Response {
 
   const onParam = params.get("on");
   if (onParam !== null) {
-    updates.on = onParam === "true";
+    const parsedOn = parseShellyOnState(onParam);
+    if (parsedOn === null) {
+      return new Response(JSON.stringify({ error: "on must be one of: true,false,1,0,on,off" }), {
+        status: 400,
+        headers: JSON_HEADERS,
+      });
+    }
+    updates.on = parsedOn;
   }
 
   const brightnessParam = params.get("brightness");
@@ -234,6 +241,17 @@ function handleLightSet(params: URLSearchParams): Response {
     status: 200,
     headers: JSON_HEADERS,
   });
+}
+
+function parseShellyOnState(value: string): boolean | null {
+  const normalized = value.trim().toLowerCase();
+  if (["1", "true", "on"].includes(normalized)) {
+    return true;
+  }
+  if (["0", "false", "off"].includes(normalized)) {
+    return false;
+  }
+  return null;
 }
 
 function handleLightGetStatus(params: URLSearchParams): Response {
