@@ -7,8 +7,14 @@ interface P1ScenarioConfig {
   description: string;
   minWatts: number;
   maxWatts: number;
+  // How much random variation to apply each step
+  // Higher values = more rapid changes
   volatility: number;
+  // Chance of a sudden surge happening each step
+  // e.g. 0.02 = 2% chance per step
   surgeChance: number;
+  // Maximum magnitude of a sudden surge
+  // e.g. 40 = up to ±40W surge
   surgeMagnitude: number;
 }
 
