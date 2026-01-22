@@ -23,6 +23,11 @@ GET /rpc/Light.Set?id=0&on=true
 GET /rpc/Light.Set?id=0&on=false
 ```
 
+Notes:
+- `brightness` and `on` are independent, mirroring real Shelly behaviour.
+- Updating `brightness` never toggles the relay; the value simply becomes the next target level.
+- Changing `on` only flips the relay state and leaves `brightness` untouched.
+
 ### Get Light Status
 Get the current state of a light. The JSON structure matches a real Shelly dimmer, but `apower` is now derived from the brightness → wattage table. Temperature and voltage drift gently within realistic ranges, while `aenergy` stays at zero for boiler-controller testing.
 

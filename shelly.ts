@@ -94,21 +94,32 @@ function setLightState(id: number, updates: Partial<LightState>): LightState | u
   if (!current) {
     return undefined;
   }
-  const updated = { ...current, ...updates };
-  const onChanged = Object.prototype.hasOwnProperty.call(updates, "on") && updates.on !== current.on;
-  const brightnessChanged =
-    Object.prototype.hasOwnProperty.call(updates, "brightness") && updates.brightness !== current.brightness;
 
-  if (onChanged || brightnessChanged) {
-    if (brightnessChanged) {
-      if ((updated.brightness ?? 0) > 0 && !updated.on) {
-        updated.on = true;
-      } else if ((updated.brightness ?? 0) === 0 && updated.on) {
-        updated.on = false;
-      }
+  const updated: LightState = { ...current };
+  const onProvided = Object.prototype.hasOwnProperty.call(updates, "on");
+  const brightnessProvided = Object.prototype.hasOwnProperty.call(updates, "brightness");
+  let shouldRecomputePower = false;
+
+  if (brightnessProvided) {
+    const nextBrightness = clamp(updates.brightness ?? 0, 0, 100);
+    if (nextBrightness !== updated.brightness) {
+      updated.brightness = nextBrightness;
+      shouldRecomputePower = shouldRecomputePower || updated.on;
     }
+  }
+
+  if (onProvided) {
+    const nextOn = Boolean(updates.on);
+    if (nextOn !== updated.on) {
+      updated.on = nextOn;
+      shouldRecomputePower = true;
+    }
+  }
+
+  if (shouldRecomputePower) {
     updated.powerWatts = updated.on ? estimateBoilerConsumption(updated.brightness) : 0;
   }
+
   lights.set(id, updated);
   syncExternalLoad();
   return updated;
