@@ -1,6 +1,6 @@
 import { clamp, JSON_HEADERS, parseBoolean, toKilowatts } from "./helpers.ts";
 
-type P1ScenarioKey = "sunny_export" | "mixed_clouds" | "swinging_grid";
+type P1ScenarioKey = "sunny_export" | "sunny_export_low" | "mixed_clouds" | "swinging_grid";
 
 interface P1ScenarioConfig {
   label: string;
@@ -45,6 +45,15 @@ const P1_SCENARIOS: Record<P1ScenarioKey, P1ScenarioConfig> = {
     surgeChance: 0.02,
     surgeMagnitude: 40,
   },
+  sunny_export_low: {
+    label: "Sunny day exporting (low)",
+    description: "Constante teruglevering van ~1500W op een volledig zonnige dag.",
+    minWatts: -1700,
+    maxWatts: -800,
+    volatility: 12,
+    surgeChance: 0.02,
+    surgeMagnitude: 40,
+  },
   mixed_clouds: {
     label: "Sun / clouds",
     description: "Variaties tussen -1kW en -4kW door afwisselende zon en bewolking.",
@@ -67,6 +76,7 @@ const P1_SCENARIOS: Record<P1ScenarioKey, P1ScenarioConfig> = {
 
 const scenarioRuntime: Record<P1ScenarioKey, { currentWatts: number }> = {
   sunny_export: { currentWatts: -3000 },
+  sunny_export_low: { currentWatts: -1500 },
   mixed_clouds: { currentWatts: -2500 },
   swinging_grid: { currentWatts: -750 },
 };

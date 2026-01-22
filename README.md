@@ -48,6 +48,7 @@ GET /p1/change-scenario?scenario=swinging_grid&negative=true
 | Scenario key    | Description                                      | Expected range  |
 | --------------- | ------------------------------------------------ | --------------- |
 | `sunny_export`  | Steady export around −3 kW                       | −3.2 kW – −2.8 kW |
+| `sunny_export_low`  | Steady export around −1.5 kW                       | −1.5 kW – −1.5 kW |
 | `mixed_clouds`  | Cloud breaks causing swings between −4 kW and −1 kW | −4 kW – −1 kW   |
 | `swinging_grid` | Similar pattern but between −2 kW and +0.5 kW    | −2 kW – 0.5 kW  |
 
