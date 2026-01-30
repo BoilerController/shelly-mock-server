@@ -4,12 +4,10 @@ import { handleShellyRequest } from "./shelly.ts";
 
 // Shelly Mock Server - A simple mock server for Shelly dimmer devices
 
-function handleRequest(request: Request): Response {
+async function handleRequest(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const pathname = url.pathname;
   const params = url.searchParams;
-
-  console.log(pathname, params);
 
   if (pathname === "/p1/reading") {
     return handleP1ReadingRequest();
@@ -20,7 +18,7 @@ function handleRequest(request: Request): Response {
   }
 
   if (pathname.startsWith("/rpc/")) {
-    const shellyResponse = handleShellyRequest(pathname, params);
+    const shellyResponse = await handleShellyRequest(request);
     if (shellyResponse) {
       return shellyResponse;
     }

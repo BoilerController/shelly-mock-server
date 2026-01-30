@@ -1,5 +1,6 @@
 import { clamp, JSON_HEADERS, lerp, randomBetween } from "./helpers.ts";
 import { setExternalLoadWatts } from "./p1.ts";
+import { SHELLY_DEVICE_URL } from "./config.ts";
 
 interface LightState {
   on: boolean;
@@ -80,6 +81,9 @@ const telemetryState = {
   energyTotalWh: 2423,
   lastEnergyTimestamp: Date.now(),
 };
+
+const normalizedDeviceUrl = SHELLY_DEVICE_URL.trim().replace(/\/+$/, "");
+const REAL_DEVICE_BASE_URL = normalizedDeviceUrl.length > 0 ? `${normalizedDeviceUrl}/` : null;
 
 // Initialize default state for light id 0
 lights.set(0, { on: false, brightness: 0, powerWatts: 0 });
@@ -180,7 +184,18 @@ function driftTelemetry(loadWatts: number): void {
   telemetryState.voltage = clamp(telemetryState.voltage + randomBetween(-0.35, 0.35), 227, 235);
 }
 
-export function handleShellyRequest(pathname: string, params: URLSearchParams): Response | null {
+export async function handleShellyRequest(request: Request): Promise<Response | null> {
+  const url = new URL(request.url);
+  const pathname = url.pathname;
+  const params = url.searchParams;
+
+  if (REAL_DEVICE_BASE_URL) {
+    return await proxyShellyRequest(request, url);
+  }
+  return handleMockShellyRequest(pathname, params);
+}
+
+function handleMockShellyRequest(pathname: string, params: URLSearchParams): Response | null {
   if (pathname === "/rpc/Light.Set") {
     return handleLightSet(params);
   }
@@ -321,4 +336,87 @@ function handleLightGetStatus(params: URLSearchParams): Response {
     status: 200,
     headers: JSON_HEADERS,
   });
+}
+
+async function proxyShellyRequest(request: Request, sourceUrl: URL): Promise<Response> {
+  if (!REAL_DEVICE_BASE_URL) {
+    return new Response(JSON.stringify({ error: "shelly proxy misconfigured" }), {
+      status: 500,
+      headers: JSON_HEADERS,
+    });
+  }
+
+  const targetUrl = new URL(sourceUrl.pathname, REAL_DEVICE_BASE_URL);
+  targetUrl.search = sourceUrl.search;
+  console.log(`Proxying Shelly request to: ${targetUrl.toString()}`);
+
+  const normalizedMethod = request.method?.toUpperCase() ?? "GET";
+  const headers = new Headers(request.headers);
+  headers.delete("host");
+  headers.delete("content-length");
+
+  const init: RequestInit = {
+    method: normalizedMethod,
+    headers,
+  };
+
+  if (normalizedMethod !== "GET" && normalizedMethod !== "HEAD") {
+    init.body = request.body;
+  }
+
+  try {
+    const upstreamResponse = await fetch(targetUrl, init);
+
+    if (upstreamResponse.ok) {
+      try {
+        const clone = upstreamResponse.clone();
+        const bodyText = await clone.text();
+        const parsed = JSON.parse(bodyText);
+        console.log("Proxied Shelly response:", parsed);
+        updateExternalLoadFromPayload(parsed);
+      } catch (_error) {
+        // Ignore JSON parsing issues for proxying purposes.
+      }
+    }
+
+    return new Response(upstreamResponse.body, {
+      status: upstreamResponse.status,
+      headers: new Headers(upstreamResponse.headers),
+    });
+  } catch (error) {
+    console.error("Failed to reach configured Shelly device", error);
+    return new Response(JSON.stringify({ error: "shelly device unavailable" }), {
+      status: 502,
+      headers: JSON_HEADERS,
+    });
+  }
+}
+
+function updateExternalLoadFromPayload(payload: unknown): void {
+  if (!payload || typeof payload !== "object") {
+    return;
+  }
+
+  const apower = extractApowerValue(payload as Record<string, unknown>);
+  if (apower === null) {
+    return;
+  }
+  setExternalLoadWatts(Math.max(0, apower));
+}
+
+function extractApowerValue(source: Record<string, unknown>): number | null {
+  const direct = source["apower"];
+  if (typeof direct === "number" && Number.isFinite(direct)) {
+    return direct;
+  }
+
+  const nested = source["result"];
+  if (nested && typeof nested === "object") {
+    const nestedValue = (nested as Record<string, unknown>)["apower"];
+    if (typeof nestedValue === "number" && Number.isFinite(nestedValue)) {
+      return nestedValue;
+    }
+  }
+
+  return null;
 }
