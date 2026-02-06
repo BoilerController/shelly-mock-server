@@ -262,8 +262,9 @@ function handleLightSet(params: URLSearchParams): Response {
     updates.brightness = brightness;
   }
 
-  const updated = setLightState(id, updates);
-  return new Response(JSON.stringify(updated), {
+  setLightState(id, updates);
+  // Shelly returns null for Light.Set
+  return new Response("null", {
     status: 200,
     headers: JSON_HEADERS,
   });
