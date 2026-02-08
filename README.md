@@ -7,7 +7,7 @@ Simple mocking a shelly dimmer
 ## Running the Server
 
 ```bash
-deno run --allow-net main.ts
+deno run --env-file --allow-net main.ts
 ```
 
 The server will start on `http://localhost:8080`.
